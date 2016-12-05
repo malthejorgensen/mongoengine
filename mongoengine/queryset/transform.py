@@ -99,17 +99,20 @@ def query(_doc_cls=None, **kwargs):
                         value = value['_id']
 
             elif op in ('in', 'nin', 'all', 'near') and not isinstance(value, dict):
+                # Raise an error if the in/nin/all/near param is not iterable. We need a
+                # special check for BaseDocument, because - although it's iterable - using
+                # it as such in the context of this method is most definitely a mistake.
                 if isinstance(value, BaseDocument):
-                    # MongoEngine documents are iterable but that isn't what
-                    # these operators are expecting, e.g.
-                    # using      `BlogPost.objects(authors__in=author)`
-                    # instead of `BlogPost.objects(authors__in=[author])`
                     raise TypeError('When using the `in`, `nin`, `all`, or ' \
-                                    '`near` operators you must use an ' \
-                                    'iterable, please wrap your object in a ' \
-                                    'list (object -> [object]).')
-                # 'in', 'nin' and 'all' require a list of values
-                value = [field.prepare_query_value(op, v) for v in value]
+                                    '`near`-operators you can\'t use a ' \
+                                    '`Document`, you must wrap your object ' \
+                                    'in a list (object -> [object]).')
+                elif not hasattr(value, '__iter__'):
+                    raise TypeError('The `in`, `nin`, `all`, or ' \
+                                    '`near`-operators must be applied to an ' \
+                                    'iterable (e.g. a list).')
+                else:
+                    value = [field.prepare_query_value(op, v) for v in value]
 
         # if op and op not in COMPARISON_OPERATORS:
         if op:
