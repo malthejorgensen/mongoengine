@@ -4917,11 +4917,6 @@ class QuerySetTest(unittest.TestCase):
             # TypeError
             BlogPost.objects(authors__in=author).count()
 
-        # Check correct usage
-        try:
-            BlogPost.objects(authors__in=[author]).count()
-        except TypeError:
-            self.fail("Using __in-operator raised type error when it shouldn't have")
 
         User.drop_collection()
         BlogPost.drop_collection()
