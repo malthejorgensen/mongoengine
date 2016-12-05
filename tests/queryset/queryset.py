@@ -4915,7 +4915,7 @@ class QuerySetTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             # Using the `__in`-operator with a non-iterable should raise a
             # TypeError
-            BlogPost.objects(authors__in=author).count()
+            BlogPost.objects(authors__in=author.id).count()
 
 
         User.drop_collection()
