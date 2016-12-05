@@ -4918,9 +4918,5 @@ class QuerySetTest(unittest.TestCase):
             BlogPost.objects(authors__in=author.id).count()
 
 
-        User.drop_collection()
-        BlogPost.drop_collection()
-
-
 if __name__ == '__main__':
     unittest.main()
