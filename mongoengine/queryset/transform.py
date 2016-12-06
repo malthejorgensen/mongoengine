@@ -81,38 +81,7 @@ def query(_doc_cls=None, **kwargs):
 
             # Convert value to proper value
             field = cleaned_fields[-1]
-
-            singular_ops = [None, 'ne', 'gt', 'gte', 'lt', 'lte', 'not']
-            singular_ops += STRING_OPERATORS
-            if op in singular_ops:
-                if isinstance(field, basestring):
-                    if (op in STRING_OPERATORS and
-                            isinstance(value, basestring)):
-                        StringField = _import_class('StringField')
-                        value = StringField.prepare_query_value(op, value)
-                    else:
-                        value = field
-                else:
-                    value = field.prepare_query_value(op, value)
-
-                    if isinstance(field, CachedReferenceField) and value:
-                        value = value['_id']
-
-            elif op in ('in', 'nin', 'all', 'near') and not isinstance(value, dict):
-                # Raise an error if the in/nin/all/near param is not iterable. We need a
-                # special check for BaseDocument, because - although it's iterable - using
-                # it as such in the context of this method is most definitely a mistake.
-                if isinstance(value, BaseDocument):
-                    raise TypeError("When using the `in`, `nin`, `all`, or "
-                                    "`near`-operators you can\'t use a "
-                                    "`Document`, you must wrap your object "
-                                    "in a list (object -> [object]).")
-                elif not hasattr(value, '__iter__'):
-                    raise TypeError("The `in`, `nin`, `all`, or "
-                                    "`near`-operators must be applied to an "
-                                    "iterable (e.g. a list).")
-                else:
-                    value = [field.prepare_query_value(op, v) for v in value]
+            value = _prepare_value(field, op, value)
 
         # if op and op not in COMPARISON_OPERATORS:
         if op:
@@ -328,6 +297,45 @@ def update(_doc_cls=None, **update):
             mongo_update[key].update(value)
 
     return mongo_update
+
+
+def _prepare_value(field, op, value):
+    """Helper that prepares a value for use in a PyMongo query"""
+    CachedReferenceField = _import_class('CachedReferenceField')
+
+    singular_ops = [None, 'ne', 'gt', 'gte', 'lt', 'lte', 'not']
+    singular_ops += STRING_OPERATORS
+    if op in singular_ops:
+        if isinstance(field, basestring):
+            if (op in STRING_OPERATORS and
+                    isinstance(value, basestring)):
+                StringField = _import_class('StringField')
+                value = StringField.prepare_query_value(op, value)
+            else:
+                value = field
+        else:
+            value = field.prepare_query_value(op, value)
+
+            if isinstance(field, CachedReferenceField) and value:
+                value = value['_id']
+
+    elif op in ('in', 'nin', 'all', 'near') and not isinstance(value, dict):
+        # Raise an error if the in/nin/all/near param is not iterable. We need a
+        # special check for BaseDocument, because - although it's iterable - using
+        # it as such in the context of this method is most definitely a mistake.
+        if isinstance(value, BaseDocument):
+            raise TypeError("When using the `in`, `nin`, `all`, or "
+                            "`near`-operators you can\'t use a "
+                            "`Document`, you must wrap your object "
+                            "in a list (object -> [object]).")
+        elif not hasattr(value, '__iter__'):
+            raise TypeError("The `in`, `nin`, `all`, or "
+                            "`near`-operators must be applied to an "
+                            "iterable (e.g. a list).")
+        else:
+            value = [field.prepare_query_value(op, v) for v in value]
+
+    return value
 
 
 def _geo_operator(field, op, value):
