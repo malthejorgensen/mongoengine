@@ -3,8 +3,8 @@ from collections import defaultdict
 from bson import SON
 import pymongo
 
-from mongoengine.base.fields import UPDATE_OPERATORS
 from mongoengine.base import BaseDocument
+from mongoengine.base.fields import UPDATE_OPERATORS
 from mongoengine.common import _import_class
 from mongoengine.connection import get_connection
 from mongoengine.errors import InvalidQueryError
@@ -103,14 +103,14 @@ def query(_doc_cls=None, **kwargs):
                 # special check for BaseDocument, because - although it's iterable - using
                 # it as such in the context of this method is most definitely a mistake.
                 if isinstance(value, BaseDocument):
-                    raise TypeError('When using the `in`, `nin`, `all`, or ' \
-                                    '`near`-operators you can\'t use a ' \
-                                    '`Document`, you must wrap your object ' \
-                                    'in a list (object -> [object]).')
+                    raise TypeError("When using the `in`, `nin`, `all`, or "
+                                    "`near`-operators you can\'t use a "
+                                    "`Document`, you must wrap your object "
+                                    "in a list (object -> [object]).")
                 elif not hasattr(value, '__iter__'):
-                    raise TypeError('The `in`, `nin`, `all`, or ' \
-                                    '`near`-operators must be applied to an ' \
-                                    'iterable (e.g. a list).')
+                    raise TypeError("The `in`, `nin`, `all`, or "
+                                    "`near`-operators must be applied to an "
+                                    "iterable (e.g. a list).")
                 else:
                     value = [field.prepare_query_value(op, v) for v in value]
 
